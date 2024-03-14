@@ -325,6 +325,7 @@ proc run_verilator {} {
         lappend arg_list {*}$output_file
     }
     lappend arg_list {*}$::env(VERILOG_FILES)
+    lappend arg_list {*}$::env(AIGER_FILES)
 
     set incdirs ""
     if { [info exists ::env(VERILOG_INCLUDE_DIRS)] } {
@@ -351,44 +352,51 @@ proc run_verilator {} {
     }
     lappend arg_list {*}$defines
 
-    puts_info "Running linter (Verilator) (log: [relpath . $log])..."
-    catch_exec verilator \
-        -Wall \
-        --lint-only \
-        --Wno-DECLFILENAME \
-        --top-module $::env(DESIGN_NAME) \
-        {*}$arg_list |& tee $log $::env(TERMINAL_OUTPUT)
-
-    set timing_errors [exec bash -c "grep -i 'Error-NEEDTIMINGOPT' $log || true"]
-    if { $timing_errors ne "" } {
-        set msg "Timing constructs found in the RTL. Please remove them or add a preprocessor guard. It is heavily discouraged to rely on timing constructs in synthesis."
-        if { $::env(QUIT_ON_LINTER_ERRORS) } {
-            puts_err $msg
-            throw_error
-        } else {
-            puts_warn $msg
-        }
-    }
-
-    set errors_count [exec bash -c "grep -i '%Error' $log | wc -l"]
-    if { [expr $errors_count > 0] } {
-        if { $::env(QUIT_ON_LINTER_ERRORS) } {
-            puts_err "$errors_count errors found by linter"
-            throw_error
-        }
-        puts_warn "$errors_count errors found by linter"
+    if { [info exists ::env(NO_LINTER)] } {
+      puts_info "No liter running"
+      set timing_errors 0
+      set error_count 0
+      set warnings_count 0
     } else {
-        puts_info "$errors_count errors found by linter"
-    }
-    set warnings_count [exec bash -c "grep -i '%Warning' $log | wc -l"]
-    if { [expr $warnings_count > 0] } {
-        if { $::env(QUIT_ON_LINTER_WARNINGS) } {
-            puts_err "$warnings_count warnings found by linter"
-            throw_error
-        }
-        puts_warn "$warnings_count warnings found by linter"
-    } else {
-        puts_info "$warnings_count warnings found by linter"
+      puts_info "Running linter (Verilator) (log: [relpath . $log])..."
+      catch_exec verilator \
+          -Wall \
+          --lint-only \
+          --Wno-DECLFILENAME \
+          --top-module $::env(DESIGN_NAME) \
+          {*}$arg_list |& tee $log $::env(TERMINAL_OUTPUT)
+
+      set timing_errors [exec bash -c "grep -i 'Error-NEEDTIMINGOPT' $log || true"]
+       if { $timing_errors ne "" } {
+          set msg "Timing constructs found in the RTL. Please remove them or add a preprocessor guard. It is heavily discouraged to rely on timing constructs in synthesis."
+          if { $::env(QUIT_ON_LINTER_ERRORS) } {
+              puts_err $msg
+              throw_error
+          } else {
+              puts_warn $msg
+          }
+      }
+
+      set errors_count [exec bash -c "grep -i '%Error' $log | wc -l"]
+      if { [expr $errors_count > 0] } {
+          if { $::env(QUIT_ON_LINTER_ERRORS) } {
+              puts_err "$errors_count errors found by linter"
+              throw_error
+          }
+          puts_warn "$errors_count errors found by linter"
+      } else {
+          puts_info "$errors_count errors found by linter"
+      }
+      set warnings_count [exec bash -c "grep -i '%Warning' $log | wc -l"]
+      if { [expr $warnings_count > 0] } {
+          if { $::env(QUIT_ON_LINTER_WARNINGS) } {
+              puts_err "$warnings_count warnings found by linter"
+              throw_error
+          }
+          puts_warn "$warnings_count warnings found by linter"
+      } else {
+          puts_info "$warnings_count warnings found by linter"
+      }
     }
 }
 

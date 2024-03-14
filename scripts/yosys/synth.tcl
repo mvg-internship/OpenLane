@@ -226,6 +226,10 @@ for { set i 0 } { $i < [llength $::env(VERILOG_FILES)] } { incr i } {
     read_verilog -sv {*}$vIdirsArgs [lindex $::env(VERILOG_FILES) $i]
 }
 
+for { set i 0 } { $i < [llength $::env(AIGER_FILES)] } { incr i } {
+    read_aiger -module_name $vtop {*}$vIdirsArgs [lindex $::env(AIGER_FILES) $i]
+}
+
 if { [info exists ::env(SYNTH_PARAMETERS) ] } {
     foreach define $::env(SYNTH_PARAMETERS) {
         set param_and_value [split $define "="]
