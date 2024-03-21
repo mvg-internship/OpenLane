@@ -325,7 +325,9 @@ proc run_verilator {} {
         lappend arg_list {*}$output_file
     }
     lappend arg_list {*}$::env(VERILOG_FILES)
-    lappend arg_list {*}$::env(AIGER_FILES)
+    if { [info exists ::env(AIGER_FILES)] } {
+        lappend arg_list {*}$::env(AIGER_FILES)
+    }
 
     set incdirs ""
     if { [info exists ::env(VERILOG_INCLUDE_DIRS)] } {
