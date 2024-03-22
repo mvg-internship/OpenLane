@@ -1,3 +1,38 @@
+<p align="center">
+1. How to process a bench file from the ABCD set for its being compatible with OpenLane?
+
+If abc is accessible via sh, try the following commands (an example is given for aes_orig.bench):
+
+```sh
+abc
+abc 01> read aes_orig.bench
+abc 02> strash
+abc 03> write_aiger aes_orig.aig
+```
+
+2. How to prepare a design for running OpenLane?
+
+First, copy the existing design folder: either techmappedNet for results of Utopia techmappers or aes_orig for benches.
+Second, update the config.json file in the newly copied folder accordingly. Take into account the following params:
+- DESIGN_NAME (top level name);
+- VERILOG_FILES (if necessary, write down Verilog files here);
+- AIGER_FILES (if necessary, write down aig files here);
+- NO_LINTER (if AIGER_FILES is used NO_LINTER should be activated);
+- DIE_AREA and FP_SIZING (should be updated if the design is much bigger than 30K logic elements).
+
+
+3. How to run OpenLane on the selected design?
+
+It can be done by means of Docker image (aes_comb here is the folder name):
+
+```sh
+sudo make
+sudo make mount
+./flow.sh -design aes_comb
+```
+
+</p>
+
 <h1 align="center">OpenLane</h1>
 <p align="center">
     <a href="https://colab.research.google.com/github/chipsalliance/silicon-notebooks/blob/main/digital-inverter-openlane.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
