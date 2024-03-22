@@ -15,6 +15,7 @@ abc 03> write_aiger aes_orig.aig
 First, copy the existing design folder:
 - use techmappedNet as a donor, if one needs to process the Verilog file resulted of Utopia techmappers;
 - use aes_comb as a donor, if one needs to process benches from ABCD set.
+
 Second, update the config.json file in the newly copied folder accordingly. Take into account the following params:
 - DESIGN_NAME (top level name);
 - VERILOG_FILES (if necessary, write down Verilog files here);
