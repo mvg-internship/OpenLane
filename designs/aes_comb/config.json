@@ -42,6 +42,7 @@
     "FP_PDN_AUTO_ADJUST": 1,
     "NO_LINTER": 1,
     "DIE_AREA": "0 0 2920 3520",
-    "FP_SIZING": "absolute"
-
+    "FP_SIZING": "absolute",
+    "ABC_NO_OPT": 1,
+    "YOSYS_NO_OPT": 1
 }

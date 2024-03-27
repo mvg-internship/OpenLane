@@ -150,7 +150,21 @@ if {$buffering==1} {
     set abc_fine_tune       ""
 }
 
-
+if {[info exist ::env(ABC_NO_OPT)]} {
+set delay_scripts [list \
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+]
+set area_scripts [list \
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m"\
+    "+read_constr,${sdc_file};strash;&get,-n;&st;&dch;&nf;&put;stime,-p;print_stats -m" \
+]
+} else {
 set delay_scripts [list \
     "+read_constr,${sdc_file};fx;mfs;strash;${abc_rf};${abc_resyn2};${abc_retime_dly}; scleanup;${abc_map_old_dly};retime,-D,{D};&get,-n;&st;&dch;&nf;&put;${abc_fine_tune};stime,-p;print_stats -m" \
     \
@@ -170,6 +184,7 @@ set area_scripts [list \
     "+read_constr,${sdc_file};fx;mfs;strash;${abc_rf};${abc_choice2};${abc_retime_area};scleanup;${abc_choice2};${abc_map_new_area};${abc_choice2};${abc_map_new_area};retime,-D,{D};&get,-n;&st;&dch;&nf;&put;${abc_fine_tune};stime,-p;print_stats -m" \
     "+read_constr,${sdc_file};strash;dch;map -B 0.9;topo;stime -c;buffer -c -N ${max_FO};upsize -c;dnsize -c;stime,-p;print_stats -m" \
 ]
+}
 
 set all_scripts [list {*}$delay_scripts {*}$area_scripts]
 
@@ -285,30 +300,36 @@ proc_dff
 proc_memwr
 proc_clean
 tee -o "$::env(synth_report_prefix)_pre_synth.$CHK_EXT" check
-opt_expr
-if { $::env(SYNTH_NO_FLAT) != 1 } {
-    flatten
+if { [info exist ::env(YOSYS_NO_OPT)]} {
+} else {
+    opt_expr
+    if { $::env(SYNTH_NO_FLAT) != 1 } {
+        flatten
+    }
+    opt_expr
+    opt_clean
+    opt -nodffe -nosdff
+    fsm
+    opt
+    wreduce
+    peepopt
+    opt_clean
+    alumacc
+    share
+    opt
+    memory -nomap
+    opt_clean
+    opt -fast -full
+    memory_map
+    opt -full
 }
-opt_expr
-opt_clean
-opt -nodffe -nosdff
-fsm
-opt
-wreduce
-peepopt
-opt_clean
-alumacc
-share
-opt
-memory -nomap
-opt_clean
-opt -fast -full
-memory_map
-opt -full
 techmap
-opt -fast
-abc -fast
-opt -fast
+if { [info exist ::env(YOSYS_NO_OPT)]} {
+} else {
+    opt -fast
+    abc -fast
+    opt -fast
+}
 hierarchy -check
 stat
 check
@@ -338,8 +359,11 @@ if { $adder_type == "FA" } {
     }
 }
 
-opt
-opt_clean -purge
+if { [info exist ::env(YOSYS_NO_OPT)] } {
+} else {
+  opt
+  opt_clean -purge
+}
 
 tee -o "$::env(synth_report_prefix)_pre.stat" stat
 
